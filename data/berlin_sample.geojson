@@ -1,0 +1,21 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {"type": "walkable"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[1,1],[1,4],[4,4],[4,1],[1,1]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"type": "obstacle"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[2,2],[2,3],[3,3],[3,2],[2,2]]]
+      }
+    }
+  ]
+}
