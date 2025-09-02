@@ -4,6 +4,8 @@
 import geopandas as gpd
 from shapely.geometry import Polygon, Point
 import osmnx as ox
+import json
+import os
 
 
 def load_geojson(filepath):
@@ -61,31 +63,56 @@ def load_map(filepath, grid_size=10):
 
 
 
-def load_osm_area(place_name, grid_size=20, network_type="walk"):
+def load_osm_area(place_name, grid_size=20, network_type="walk", cache_dir="data/osm_cache"):
     """
-    Load real-world data from OpenStreetMap.
+    Load or cache walkable/obstacle cells from OpenStreetMap, more precisely:
+    1. Downloads the OSM street network and building footprints for a given place (e.g., Gesundbrunnen, Berlin))
+    2. Crops a square bounding box into a grid_size × grid_size raster grid
+    3. For each cell:
+     - If it's close to a walkable edge → it’s marked as walkable
+     - If it intersects a building polygon → it’s marked as an obstacle
 
     Parameters
     ----------
     place_name : str
-        Name of the place to search (e.g. "Berlin, Germany").
+        Place to search (e.g. "Berlin, Germany")
     grid_size : int
-        How many cells per side in rasterization.
+        Grid size
     network_type : str
-        'walk', 'drive', 'bike', etc.
+        Type of OSM network ('walk', 'drive', etc.)
+    cache_dir : str
+        Where to save/load .json cached maps
 
     Returns
-    ----------
+    -------
     walkable_cells : set of (x, y)
     obstacle_cells : set of (x, y)
     """
 
+    # -----------------------
+    # Check if a .json cache exists
+    # -----------------------
+    os.makedirs(cache_dir, exist_ok=True)
+    safe_name = place_name.lower().replace(" ", "_").replace(",", "")
+    cache_path = f"{cache_dir}/{safe_name}_grid{grid_size}.json"
+
+    if os.path.exists(cache_path):
+        print(f"💾 Loading cached map from {cache_path}")
+        with open(cache_path, "r") as f:
+            data = json.load(f)
+        walkable = set(tuple(cell) for cell in data["walkable"])
+        obstacles = set(tuple(cell) for cell in data["obstacles"])
+        return walkable, obstacles
+
     print(f"🌍 Downloading OSM data for '{place_name}'...")
 
+    # -----------------------
+    # Parsing Logic
+    # -----------------------
     # Get walking graph + buildings
     G = ox.graph_from_place(place_name, network_type=network_type)
     gdf_nodes, gdf_edges = ox.graph_to_gdfs(G)
-    buildings = ox.geometries_from_place(place_name, tags={"building": True})
+    buildings = ox.features_from_place(place_name, tags={"building": True})
 
     # Build bounding box grid
     bounds = gdf_edges.total_bounds  # (minx, miny, maxx, maxy)
@@ -111,4 +138,23 @@ def load_osm_area(place_name, grid_size=20, network_type="walk"):
             if any(buildings.contains(point)):
                 obstacle_cells.add((i, j))
 
+    # -----------------------
+    # Save cache
+    # -----------------------
+    with open(cache_path, "w") as f:
+        json.dump({
+            "walkable": list(walkable_cells),
+            "obstacles": list(obstacle_cells),
+        }, f, indent=2)
+    print(f"✅ Cached to {cache_path}")
+
+    # -----------------------
+    # Return results
+    # -----------------------
     return walkable_cells, obstacle_cells
+
+
+if __name__ == "__main__":
+    G = ox.graph_from_place("Berlin, Germany", network_type="walk")
+    ox.plot_graph(G)
+

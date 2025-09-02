@@ -7,9 +7,10 @@ import gymnasium as gym
 from gymnasium import spaces
 from env.dynamics import apply_dynamics
 from env.map_parser import load_map
+from env.map_parser import load_osm_area
 
-default_map_path = "data/berlin_sample.geojson"
-_, default_blocked = load_map(default_map_path, grid_size=10)
+_, blocked_basic = load_map("data/berlin_sample.geojson", grid_size=10)
+_, blocked_hussitenstrasse = load_osm_area("Hussitenstrasse 68, Berlin, Germany", grid_size=20)
 
 class GeoNavEnv(gym.Env):
     """
@@ -24,7 +25,7 @@ class GeoNavEnv(gym.Env):
 
     metadata = {"render.modes": ["human"]}
 
-    def __init__(self, grid_size=5):
+    def __init__(self, grid_size=5, default_blocked=blocked_hussitenstrasse):
         super().__init__()
         self.grid_size = grid_size
         self.action_space = spaces.Discrete(4)  # 0: up, 1: down, 2: left, 3: right

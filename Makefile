@@ -33,6 +33,11 @@ test:
 format:
 	black env/ experiments/ visualizations/ tests/
 
-# ---- Cleanup ----
+# ---- Cleanup (including Jupyter notebooks) ----
 clean:
-	rm -rf __pycache__ */__pycache__ .pytest_cache logs/ models/ outputs/
+	rm -rf __pycache__ */__pycache__ .pytest_cache logs/ models/ outputs/ *.zip
+	rm -rf *.ipynb_checkpoints */*.ipynb_checkpoints
+
+# ---- Additionally delete all subfolders with name "cache" and what is inside ----
+clean_cache:
+	find . -type d -name "cache" -exec rm -rf {} +

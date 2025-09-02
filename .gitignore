@@ -1,11 +1,13 @@
 # Ignore virtual environment
 venv/
 
-# Ignore Python cache
+# Ignore Python cache (including Jupyter notebooks)
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
+.ipynb_checkpoints/
+
 
 # Ignore logs and temporary files
 *.log
@@ -22,4 +24,8 @@ logs/
 *.zip
 *.pt
 *.ckpt
+
+# Ignore cache directories, and their contents
+cache/
+*.cache
 
