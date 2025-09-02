@@ -14,3 +14,12 @@ __pycache__/
 # Ignore OS-specific files
 .DS_Store
 Thumbs.db
+
+# Ignore machine learning artifacts
+models/
+logs/
+*.npz
+*.zip
+*.pt
+*.ckpt
+
